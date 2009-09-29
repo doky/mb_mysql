@@ -248,6 +248,16 @@ ALTER TABLE `release`
 ADD PRIMARY KEY id (id);
 -- end
 
+-- primary release_group
+ALTER TABLE `release_group`
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary release_group_meta
+ALTER TABLE `release_group_meta`
+ADD PRIMARY KEY id (id);
+-- end
+
 -- primary replication_control
 ALTER TABLE replication_control
 ADD PRIMARY KEY id (id);
@@ -558,6 +568,13 @@ ADD INDEX album (album),
 ADD INDEX label (label),
 ADD INDEX catno (catno),
 ADD INDEX barcode (barcode);
+-- end
+
+-- index release_group
+ALTER TABLE `release_group`
+ADD INDEX gid (gid),
+ADD INDEX name (name),
+ADD INDEX artist (artist);
 -- end
 
 -- index track
