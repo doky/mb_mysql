@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS album
     script              INTEGER, -- references script
     modpending_lang     INTEGER,
     quality             SMALLINT DEFAULT -1,
-    modpending_qual     INTEGER DEFAULT 0
+    modpending_qual     INTEGER DEFAULT 0,
+    release_group       INTEGER NOT NULL
 ) ENGINE = InnoDB;
 -- end
  

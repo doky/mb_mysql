@@ -388,6 +388,7 @@ ALTER TABLE album
 ADD INDEX gid (gid),
 ADD INDEX name (name),
 ADD INDEX artist (artist);
+ADD INDEX release_group (release_group);
 -- end
 
 -- index album_amazon_asin
