@@ -1169,7 +1169,8 @@ CREATE TABLE IF NOT EXISTS mycollection_users
     settings text
 ) ENGINE = InnoDB;
 -- end
--- create mycollection_ratings
+
+-- create mycollection_ratings
 CREATE TABLE IF NOT EXISTS mycollection_ratings
 (
     idx int PRIMARY KEY,
@@ -1186,7 +1187,8 @@ CREATE TABLE IF NOT EXISTS mycollection_ratings
     ranking int
 ) ENGINE = InnoDB;
 -- end
--- create livestats
+
+-- create livestats
 CREATE TABLE IF NOT EXISTS livestats
 (
   name VARCHAR(255) PRIMARY KEY,

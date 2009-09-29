@@ -162,7 +162,7 @@ ADD INDEX link_type (link_type);
 ALTER TABLE l_url_url
 ADD INDEX link_type (link_type);
 -- end
--- create livestats
+-- create livestats
 CREATE TABLE IF NOT EXISTS livestats
 (
   name VARCHAR(255) PRIMARY KEY,
