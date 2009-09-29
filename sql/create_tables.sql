@@ -760,22 +760,24 @@ CREATE TABLE IF NOT EXISTS `release`
 -- end
 
 -- create release_group
-CREATE TABLE `release_group` (
-  id                    INTEGER NOT NULL,
-  gid                   CHAR(36) NOT NULL,
-  name                  VARCHAR(255) NOT NULL,
-  page                  INTEGER NOT NULL,
-  artist                INTEGER NOT NULL,
-  type                  SMALLINT DEFAULT NULL,
-  modpending            INTEGER DEFAULT '0'
+CREATE TABLE IF NOT EXISTS `release_group`
+(
+    id                    INTEGER NOT NULL,
+    gid                   CHAR(36) NOT NULL,
+    name                  VARCHAR(255) NOT NULL,
+    page                  INTEGER NOT NULL,
+    artist                INTEGER NOT NULL,
+    type                  SMALLINT DEFAULT NULL,
+    modpending            INTEGER DEFAULT '0'
 ) ENGINE = InnoDB;
 -- end
 
 -- create release_group_meta
-CREATE TABLE `release_group_meta` (
-  id                    INTEGER NOT NULL,
-  lastupdate            TIMESTAMP DEFAULT NOW(),
-  firstreleasedate      CHAR(10) default NULL
+CREATE TABLE IF NOT EXISTS `release_group_meta`
+(
+    id                    INTEGER NOT NULL,
+    lastupdate            TIMESTAMP DEFAULT NOW(),
+    firstreleasedate      CHAR(10) default NULL
 ) ENGINE = InnoDB;
 -- end
 
