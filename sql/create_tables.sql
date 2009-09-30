@@ -761,7 +761,7 @@ CREATE TABLE IF NOT EXISTS `release`
 -- end
 
 -- create release_group
-CREATE TABLE IF NOT EXISTS `release_group`
+CREATE TABLE IF NOT EXISTS release_group
 (
     id                    INTEGER NOT NULL,
     gid                   CHAR(36) NOT NULL,
@@ -774,11 +774,12 @@ CREATE TABLE IF NOT EXISTS `release_group`
 -- end
 
 -- create release_group_meta
-CREATE TABLE IF NOT EXISTS `release_group_meta`
+CREATE TABLE IF NOT EXISTS release_group_meta
 (
     id                    INTEGER NOT NULL,
     lastupdate            TIMESTAMP DEFAULT NOW(),
-    firstreleasedate      CHAR(10) default NULL
+    firstreleasedate      CHAR(10) default NULL,
+    releasecount          INTEGER DEFAULT '0'
 ) ENGINE = InnoDB;
 -- end
 
