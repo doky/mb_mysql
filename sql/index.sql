@@ -383,16 +383,6 @@ ALTER TABLE label_meta
 ADD PRIMARY KEY id (id);
 -- end
 
--- primary release_groupwords
-ALTER TABLE release_groupwords
-ADD PRIMARY KEY id (id);
--- end
-
--- primary tag_relation
-ALTER TABLE tag_relation
-ADD PRIMARY KEY id (id);
--- end
-
 -- primary track_meta
 ALTER TABLE track_meta
 ADD PRIMARY KEY id (id);
@@ -402,7 +392,7 @@ ADD PRIMARY KEY id (id);
 ALTER TABLE album
 ADD INDEX gid (gid),
 ADD INDEX name (name),
-ADD INDEX artist (artist);
+ADD INDEX artist (artist),
 ADD INDEX release_group (release_group);
 -- end
 
