@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS albummeta
     lastupdate          TIMESTAMP DEFAULT NOW(), -- CHANGE: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
     rating              FLOAT,
     rating_count        INTEGER,
-    dateadded           TIMESTAMP DEFAULT NOW() -- CHANGE: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+    dateadded           TIMESTAMP -- CHANGE: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
 ) ENGINE = InnoDB;
 -- end
  
