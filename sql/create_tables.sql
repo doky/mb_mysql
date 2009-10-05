@@ -54,11 +54,14 @@ CREATE TABLE IF NOT EXISTS albummeta
     id                  INTEGER NOT NULL,
     tracks              INTEGER DEFAULT 0,
     discids             INTEGER DEFAULT 0,
-    trmids              INTEGER DEFAULT 0,
     puids               INTEGER DEFAULT 0,
     firstreleasedate    CHAR(10),
     asin                CHAR(10),
-    coverarturl         VARCHAR(255)
+    coverarturl         VARCHAR(255),
+    lastupdate          TIMESTAMP DEFAULT NOW(), -- CHANGE: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+    rating              FLOAT,
+    rating_count        INTEGER,
+    dateadded           TIMESTAMP DEFAULT NOW() -- CHANGE: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
 ) ENGINE = InnoDB;
 -- end
  
@@ -123,6 +126,16 @@ CREATE TABLE IF NOT EXISTS artist_tag
     artist              INTEGER NOT NULL,
     tag                 INTEGER NOT NULL,
     count               INTEGER NOT NULL
+) ENGINE = InnoDB;
+-- end
+
+-- create artist_meta
+CREATE TABLE IF NOT EXISTS artist_meta
+(
+    id                    INTEGER NOT NULL,
+    lastupdate            TIMESTAMP DEFAULT NOW(),
+    rating                FLOAT,
+    rating_count          INTEGER
 ) ENGINE = InnoDB;
 -- end
 
@@ -202,6 +215,17 @@ CREATE TABLE IF NOT EXISTS currentstat
 ) ENGINE = InnoDB;
 -- end
 
+-- create isrc
+CREATE TABLE IF NOT EXISTS isrc
+(
+    id                  INTEGER NOT NULL,
+    track               INTEGER NOT NULL, -- references track
+    isrc                CHAR(12) NOT NULL,
+    source              SMALLINT,
+    modpending          INTEGER DEFAULT 0
+) ENGINE = InnoDB;
+-- end
+
 -- create historicalstat
 CREATE TABLE IF NOT EXISTS historicalstat
 (
@@ -234,6 +258,16 @@ CREATE TABLE IF NOT EXISTS label_tag
 ) ENGINE = InnoDB;
 -- end
 
+-- create label_meta
+CREATE TABLE IF NOT EXISTS label_meta
+(
+    id                    INTEGER NOT NULL,
+    lastupdate            TIMESTAMP DEFAULT NOW(),
+    rating                FLOAT,
+    rating_count          INTEGER
+) ENGINE = InnoDB;
+-- end
+
 -- create release_tag
 CREATE TABLE IF NOT EXISTS release_tag
 (
@@ -249,6 +283,15 @@ CREATE TABLE IF NOT EXISTS tag
     id                  INTEGER NOT NULL,
     name                VARCHAR(255) NOT NULL,
     refcount            INTEGER NOT NULL DEFAULT 0
+) ENGINE = InnoDB;
+-- end
+
+-- create tag_relation
+CREATE TABLE IF NOT EXISTS tag_relation
+(
+    tag1                INTEGER NOT NULL,
+    tag2                INTEGER NOT NULL,
+    weight              INTEGER NOT NULL
 ) ENGINE = InnoDB;
 -- end
 
@@ -386,7 +429,6 @@ CREATE TABLE IF NOT EXISTS language
      isocode_3b         CHAR(3) NOT NULL, -- ISO 639-2 (B)
      isocode_2          CHAR(2), -- ISO 639
      name               VARCHAR(100) NOT NULL,
-     french_name        VARCHAR(100) NOT NULL,
      frequency          INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
@@ -426,7 +468,9 @@ CREATE TABLE IF NOT EXISTS lt_album_album
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -442,7 +486,9 @@ CREATE TABLE IF NOT EXISTS lt_album_artist
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -458,7 +504,9 @@ CREATE TABLE IF NOT EXISTS lt_album_track
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -474,7 +522,9 @@ CREATE TABLE IF NOT EXISTS lt_album_url
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -490,7 +540,9 @@ CREATE TABLE IF NOT EXISTS lt_artist_artist
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -506,7 +558,9 @@ CREATE TABLE IF NOT EXISTS lt_artist_track
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -522,7 +576,9 @@ CREATE TABLE IF NOT EXISTS lt_artist_url
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -538,7 +594,9 @@ CREATE TABLE IF NOT EXISTS lt_track_track
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -554,7 +612,9 @@ CREATE TABLE IF NOT EXISTS lt_track_url
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -570,7 +630,9 @@ CREATE TABLE IF NOT EXISTS lt_url_url
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -581,7 +643,7 @@ CREATE TABLE IF NOT EXISTS moderation_note_closed
     moderation          INTEGER NOT NULL,
     moderator           INTEGER NOT NULL,
     text                TEXT NOT NULL,
-    notetime        TIMESTAMP DEFAULT NOW() -- CHANGE: " WITH TIME ZONE"
+    notetime            TIMESTAMP DEFAULT NOW() -- CHANGE: " WITH TIME ZONE"
 ) ENGINE = InnoDB;
 -- end
 
@@ -592,7 +654,7 @@ CREATE TABLE IF NOT EXISTS moderation_note_open
     moderation          INTEGER NOT NULL,
     moderator           INTEGER NOT NULL,
     text                TEXT NOT NULL,
-    notetime        TIMESTAMP DEFAULT NOW() -- CHANGE: " WITH TIME ZONE"
+    notetime            TIMESTAMP DEFAULT NOW() -- CHANGE: " WITH TIME ZONE"
 ) ENGINE = InnoDB;
 -- end
 
@@ -783,6 +845,14 @@ CREATE TABLE IF NOT EXISTS release_group_meta
 ) ENGINE = InnoDB;
 -- end
 
+-- create release_groupwords
+CREATE TABLE IF NOT EXISTS release_groupwords
+(
+    wordid              INTEGER NOT NULL,
+    release_groupid     INTEGER NOT NULL
+) ENGINE = InnoDB;
+-- end
+
 -- create replication_control
 CREATE TABLE IF NOT EXISTS replication_control
 (
@@ -800,7 +870,6 @@ CREATE TABLE IF NOT EXISTS script
      isocode            CHAR(4) NOT NULL, -- ISO 15924
      isonumber          CHAR(3) NOT NULL, -- ISO 15924
      name               VARCHAR(100) NOT NULL,
-     french_name        VARCHAR(100) NOT NULL,
      frequency          INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
@@ -823,7 +892,6 @@ CREATE TABLE IF NOT EXISTS stats
     albums              INTEGER NOT NULL,
     tracks              INTEGER NOT NULL,
     discids             INTEGER NOT NULL,
-    trmids              INTEGER NOT NULL,
     moderations         INTEGER NOT NULL,
     votes               INTEGER NOT NULL,
     moderators          INTEGER NOT NULL,
@@ -844,43 +912,12 @@ CREATE TABLE IF NOT EXISTS track
 ) ENGINE = InnoDB;
 -- end
 
--- create trm
-CREATE TABLE IF NOT EXISTS trm
+-- create track_meta
+CREATE TABLE IF NOT EXISTS track_meta
 (
-    id                  INTEGER NOT NULL,
-    trm                 CHAR(36) NOT NULL,
-    lookupcount         INTEGER NOT NULL DEFAULT 0, -- updated via trigger
-    version             INTEGER NOT NULL -- references clientversion
-) ENGINE = InnoDB;
--- end
-
--- create trm_stat
-CREATE TABLE IF NOT EXISTS trm_stat
-(
-    id                  INTEGER NOT NULL,
-    trm_id              INTEGER NOT NULL, -- references trm
-    month_id            INTEGER NOT NULL,
-    lookupcount         INTEGER NOT NULL DEFAULT 0
-) ENGINE = InnoDB;
--- end
-
--- create trmjoin
-CREATE TABLE IF NOT EXISTS trmjoin
-(
-    id                  INTEGER NOT NULL,
-    trm                 INTEGER NOT NULL, -- references trm
-    track               INTEGER NOT NULL, -- references track
-    usecount            INTEGER DEFAULT 0 -- updated via trigger
-) ENGINE = InnoDB;
--- end
-
--- create trmjoin_stat
-CREATE TABLE IF NOT EXISTS trmjoin_stat
-(
-    id                  INTEGER NOT NULL,
-    trmjoin_id          INTEGER NOT NULL, -- references trmjoin
-    month_id            INTEGER NOT NULL,
-    usecount            INTEGER NOT NULL DEFAULT 0
+    id                    INTEGER NOT NULL,
+    rating                FLOAT,
+    rating_count          INTEGER
 ) ENGINE = InnoDB;
 -- end
 
@@ -1036,7 +1073,9 @@ CREATE TABLE IF NOT EXISTS lt_album_label
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -1052,7 +1091,9 @@ CREATE TABLE IF NOT EXISTS lt_artist_label
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -1068,7 +1109,9 @@ CREATE TABLE IF NOT EXISTS lt_label_label
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 	
@@ -1084,7 +1127,9 @@ CREATE TABLE IF NOT EXISTS lt_label_track
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
  	
@@ -1100,7 +1145,9 @@ CREATE TABLE IF NOT EXISTS lt_label_url
     linkphrase          VARCHAR(255) NOT NULL,
     rlinkphrase         VARCHAR(255) NOT NULL,
     attribute           VARCHAR(255) DEFAULT '',
-    modpending          INTEGER NOT NULL DEFAULT 0
+    modpending          INTEGER NOT NULL DEFAULT 0,
+    shortlinkphrase     VARCHAR(255) NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -1113,6 +1160,16 @@ CREATE TABLE IF NOT EXISTS moderator_subscribe_label
     lastmodsent         INTEGER NOT NULL, -- weakly references moderation
     deletedbymod        INTEGER NOT NULL DEFAULT 0, -- weakly references moderation
     mergedbymod         INTEGER NOT NULL DEFAULT 0 -- weakly references moderation
+) ENGINE = InnoDB;
+-- end
+
+-- create editor_subscribe_editor
+CREATE TABLE IF NOT EXISTS editor_subscribe_editor
+(
+    id                  INTEGER NOT NULL,
+    editor              INTEGER NOT NULL, -- references moderator (the one who has subscribed)
+    subscribededitor    INTEGER NOT NULL, -- references moderator (the one being subscribed)
+    lasteditsent        INTEGER NOT NULL  -- weakly references moderation
 ) ENGINE = InnoDB;
 -- end
 
@@ -1151,12 +1208,13 @@ CREATE TABLE IF NOT EXISTS albumwords
 -- create wordlist
 CREATE TABLE IF NOT EXISTS wordlist
 (
-    id                  INTEGER NOT NULL,
-    word                VARCHAR(255) NOT NULL,
-    artistusecount      SMALLINT NOT NULL DEFAULT 0,
-    albumusecount       SMALLINT NOT NULL DEFAULT 0,
-    trackusecount       SMALLINT NOT NULL DEFAULT 0,
-    labelusecount       SMALLINT NOT NULL DEFAULT 0
+    id                    INTEGER NOT NULL,
+    word                  VARCHAR(255) NOT NULL,
+    artistusecount        SMALLINT NOT NULL DEFAULT 0,
+    albumusecount         SMALLINT NOT NULL DEFAULT 0,
+    trackusecount         SMALLINT NOT NULL DEFAULT 0,
+    labelusecount         SMALLINT NOT NULL DEFAULT 0,
+    release_groupusecount SMALLINT NOT NULL DEFAULT 0
 ) ENGINE = InnoDB;
 -- end
 
@@ -1224,4 +1282,3 @@ CREATE TABLE IF NOT EXISTS livestats
 -- view release_
 CREATE VIEW release_ AS SELECT * FROM `release`;
 -- end
-

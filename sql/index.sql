@@ -68,6 +68,11 @@ ALTER TABLE currentstat
 ADD PRIMARY KEY id (id);
 -- end
 
+-- primary isrc
+ALTER TABLE isrc
+ADD PRIMARY KEY id (id);
+-- end
+
 -- primary historicalstat
 ALTER TABLE historicalstat
 ADD PRIMARY KEY id (id);
@@ -283,26 +288,6 @@ ALTER TABLE track
 ADD PRIMARY KEY id (id);
 -- end
 
--- primary trm
-ALTER TABLE trm
-ADD PRIMARY KEY id (id);
--- end
-
--- primary trm_stat
-ALTER TABLE trm_stat
-ADD PRIMARY KEY id (id);
--- end
-
--- primary trmjoin
-ALTER TABLE trmjoin
-ADD PRIMARY KEY id (id);
--- end
-
--- primary trmjoin_stat
-ALTER TABLE trmjoin_stat
-ADD PRIMARY KEY id (id);
--- end
-
 -- primary url
 ALTER TABLE url
 ADD PRIMARY KEY id (id);
@@ -378,8 +363,38 @@ ALTER TABLE moderator_subscribe_label
 ADD PRIMARY KEY id (id);
 -- end
 
+-- primary editor_subscribe_editor
+ALTER TABLE editor_subscribe_editor
+ADD PRIMARY KEY id (id);
+-- end
+
 -- primary wordlist
 ALTER TABLE wordlist
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary artist_meta
+ALTER TABLE artist_meta
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary label_meta
+ALTER TABLE label_meta
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary release_groupwords
+ALTER TABLE release_groupwords
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary tag_relation
+ALTER TABLE tag_relation
+ADD PRIMARY KEY id (id);
+-- end
+
+-- primary track_meta
+ALTER TABLE track_meta
 ADD PRIMARY KEY id (id);
 -- end
 
@@ -393,7 +408,8 @@ ADD INDEX release_group (release_group);
 
 -- index album_amazon_asin
 ALTER TABLE album_amazon_asin
-ADD INDEX album (album);
+ADD INDEX album (album),
+ADD INDEX lastupdate (lastupdate);
 -- end
 
 -- index album_cdtoc
@@ -407,11 +423,21 @@ ADD INDEX album (album),
 ADD INDEX track (track);
 -- end
 
+-- index albummeta
+ALTER TABLE albummeta
+ADD INDEX lastupdate (lastupdate);
+-- end
+
 -- index artist
 ALTER TABLE artist
 ADD INDEX gid (gid),
 ADD INDEX name (name),
 ADD INDEX sortname (sortname);
+-- end
+
+-- index artist_meta
+ALTER TABLE artist_meta
+ADD INDEX lastupdate (lastupdate);
 -- end
 
 -- index artistalias
@@ -545,6 +571,11 @@ ADD INDEX gid (gid),
 ADD INDEX labelcode (labelcode);
 -- end
 
+-- index label_meta
+ALTER TABLE label_meta
+ADD INDEX lastupdate (lastupdate);
+-- end
+
 -- index labelalias
 ALTER TABLE labelalias
 ADD INDEX id (id),
@@ -578,22 +609,22 @@ ADD INDEX name (name),
 ADD INDEX artist (artist);
 -- end
 
+-- index release_group_meta
+ALTER TABLE release_group_meta
+ADD INDEX lastupdate (lastupdate);
+-- end
+
+-- index release_groupwords
+ALTER TABLE release_groupwords
+ADD INDEX release_groupid (release_groupid),
+ADD INDEX wordid (wordid);
+-- end
+
 -- index track
 ALTER TABLE track
 ADD INDEX gid (gid),
 ADD INDEX artist (artist),
 ADD INDEX name (name);
--- end
-
--- index trm
-ALTER TABLE trm
-ADD INDEX trm (trm);
--- end
-
--- index trmjoin
-ALTER TABLE trmjoin
-ADD INDEX trm (trm),
-ADD INDEX track (track);
 -- end
 
 -- index url

@@ -26,6 +26,10 @@ DROP TABLE IF EXISTS annotation;
 DROP TABLE IF EXISTS artist;
 -- end
 
+-- drop artist_meta
+DROP TABLE IF EXISTS artist_meta;
+-- end
+
 -- drop artistalias
 DROP TABLE IF EXISTS artistalias;
 -- end
@@ -62,6 +66,10 @@ DROP TABLE IF EXISTS country;
 DROP TABLE IF EXISTS currentstat;
 -- end
 
+-- drop isrc
+DROP TABLE IF EXISTS isrc;
+-- end
+
 -- drop historicalstat
 DROP TABLE IF EXISTS historicalstat;
 -- end
@@ -80,6 +88,10 @@ DROP TABLE IF EXISTS release_tag;
 
 -- drop tag
 DROP TABLE IF EXISTS tag;
+-- end
+
+-- drop tag_relation
+DROP TABLE IF EXISTS tag_relation;
 -- end
 
 -- drop track_tag
@@ -234,6 +246,18 @@ DROP TABLE IF EXISTS `release`;
 DROP VIEW IF EXISTS release_;
 -- end
 
+-- drop release_group
+DROP TABLE IF EXISTS release_group;
+-- end
+
+-- drop release_group_meta
+DROP TABLE IF EXISTS release_group_meta;
+-- end
+
+-- drop release_groupwords
+DROP TABLE IF EXISTS release_groupwords;
+-- end
+
 -- drop replication_control
 DROP TABLE IF EXISTS replication_control;
 -- end
@@ -254,20 +278,8 @@ DROP TABLE IF EXISTS stats;
 DROP TABLE IF EXISTS track;
 -- end
 
--- drop trm
-DROP TABLE IF EXISTS trm;
--- end
-
--- drop trm_stat
-DROP TABLE IF EXISTS trm_stat;
--- end
-
--- drop trmjoin
-DROP TABLE IF EXISTS trmjoin;
--- end
-
--- drop trmjoin_stat
-DROP TABLE IF EXISTS trmjoin_stat;
+-- drop track_meta
+DROP TABLE IF EXISTS track_meta;
 -- end
 
 -- drop url
@@ -284,6 +296,10 @@ DROP TABLE IF EXISTS vote_open;
 
 -- drop label
 DROP TABLE IF EXISTS label;
+-- end
+
+-- drop label_meta
+DROP TABLE IF EXISTS label_meta;
 -- end
 
 -- drop gid_redirect
@@ -336,6 +352,10 @@ DROP TABLE IF EXISTS lt_label_url;
 
 -- drop moderator_subscribe_label
 DROP TABLE IF EXISTS moderator_subscribe_label;
+-- end
+
+-- drop editor_subscribe_editor
+DROP TABLE IF EXISTS editor_subscribe_editor;
 -- end
 
 -- drop artistwords
