@@ -158,14 +158,16 @@ sub sql_unescape {
 	return @k;
 }
 
-# MySQL does not support integer arrays, this will convert the array to a
-# large number that can be pulled apart later.
+# It seems there's not enough information to deterministically get anything but status back out (since it's always between 100-103) from pg dump,
+#  since I've seen the following values in the dump: {0,4}, {0,100}, {0,0}, {0}, {0,9,100}
+# So for now we are just going to convert 'attributes' into an integer for status.  if the array contains a value between 100-103, we use that. else, 0.
+# As for release type, that can be still be retrieved from a release's release_group.type
 sub procAttributes {
   $b = substr($_[0], 1, length($_[0]) - 2);
   @nums = split(",", $b);
-  $r = ($nums[0] * 1000000) + ($nums[1] * 1000) + $nums[2] if (@nums == 3);
-  $r = $nums[0] if (@nums == 1);
-  return $r;
+
+  @status_attributes = grep { $_ >= 100 && $_ <= 103 } @nums;
+  return $status_attributes[0] || 0;
 }
 
 sub prepare_insert {

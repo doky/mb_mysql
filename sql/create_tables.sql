@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS album
     name                VARCHAR(255) NOT NULL,
     gid                 CHAR(36) NOT NULL,
     modpending          INTEGER DEFAULT 0,
-    attributes          INTEGER DEFAULT 0,
+    status              INTEGER DEFAULT 0, -- used to be attributes. see MB_Funcs.pl for explanation
     page                INTEGER NOT NULL,
     language            INTEGER, -- references language
     script              INTEGER, -- references script
