@@ -110,6 +110,7 @@ $sql = "SELECT count(*) from Pending";
 $sth = $dbh->prepare($sql);
 $sth->execute;
 @row = $sth->fetchrow_array();
+$pending_xactions = $row[0];
 if($f_info) {
 	print "\nCurrent replication       : " . ($rep + 1);
 	$sql = "SELECT * from replication_control";
@@ -117,7 +118,7 @@ if($f_info) {
 	$sth2->execute;
 	my @row2 = $sth2->fetchrow_array();
 	print "\nLast replication finished : " . &format_sql_date($row2[3]);
-	print "\n\nPending transactions      : $row[0]\n\n";
+	print "\n\nPending transactions      : $pending_xactions\n\n";
 	exit(0);
 }
 
@@ -125,7 +126,7 @@ print "\nCurrent replication is $rep\n\n";
 $id = int($rep) + 1;
 print "Looking for previous pending changes... ";
 
-if($row[0] eq '0' && !$f_info) {
+if('0' eq $pending_xactions && !$f_info) {
 	print "None\n\n";
 	if($f_onlypending) {
 		exit(0);
@@ -144,28 +145,28 @@ if($row[0] eq '0' && !$f_info) {
 		}
 	}
 	&unzip($id);
-	if(&checkNewSchema($rep + 1)) {
-	  BEGINSCHEMA:
-	  if(!&download_schema($schema + 1)) {
-	    print "New schema not available yet.\n";
-	    if($f_keeprunning) {
-			  $wait = $g_rep_chkevery;
-			  while($wait > 0) {
-				  print "Trying again in $wait minutes\n";
-				  sleep(60);
-				  $wait -= 1;
-			  }
-			  goto BEGINSCHEMA;
-		  }
-		  exit(0);
-	  }
-	  &unzip_schema($schema + 1);
-	  &run_schema($schema + 1);
-	  &clean_sid($schema + 1);
-	}
+  # if(&checkNewSchema($rep + 1)) {
+  #   BEGINSCHEMA:
+  #   if(!&download_schema($schema + 1)) {
+  #     print "New schema not available yet.\n";
+  #     if($f_keeprunning) {
+  #       $wait = $g_rep_chkevery;
+  #       while($wait > 0) {
+  #         print "Trying again in $wait minutes\n";
+  #         sleep(60);
+  #         $wait -= 1;
+  #       }
+  #       goto BEGINSCHEMA;
+  #     }
+  #     exit(0);
+  #   }
+  #   &unzip_schema($schema + 1);
+  #   &run_schema($schema + 1);
+  #   &clean_sid($schema + 1);
+  # }
 	&load_data($id);
 } else {
-	print "$row[0] pending\n\n";
+	print "$pending_xactions pending\n\n";
 	&run_transactions();
 }
 
@@ -178,18 +179,18 @@ sub format_sql_date {
 	return substr($str, 8, 2) . ' ' . $g_months[int(substr($str, 5, 2))] . ' ' . substr($str, 0, 4) . ' ' . substr($str, 11, 8);
 }
 
-sub run_schema {
-  $sid = $_[0];
-  system("perl replication/schema-$sid/update.pl");
-}
+# sub run_schema {
+#   $sid = $_[0];
+#   system("perl replication/schema-$sid/update.pl");
+# }
 
-sub clean_sid {
-  $sid = $_[0];
-
-	# Clean up. Remove schema files.
-	system("rm -f replication/schema-$sid.tar.bz2");
-	system("rm -f -r replication/schema-$sid");
-}
+# sub clean_sid {
+#   $sid = $_[0];
+# 
+#   # Clean up. Remove schema files.
+#   system("rm -f replication/schema-$sid.tar.bz2");
+#   system("rm -f -r replication/schema-$sid");
+# }
 
 sub download {
   $id = $_[0];
@@ -220,45 +221,45 @@ sub download {
   return $found;
 }
 
-sub download_schema {
-  $sid = $_[0];
-	print "DOWNLOADING SCHEMA: $sid\n";
-	
-	# make sure that the file isn't already downloaded
-	if(-e "replication/schema-$sid.tar.bz2") {
-		print localtime() . ": Downloading Schema... Done\n";
-  	return 1;
-	}
+# sub download_schema {
+#   $sid = $_[0];
+#   print "DOWNLOADING SCHEMA: $sid\n";
+#   
+#   # make sure that the file isn't already downloaded
+#   if(-e "replication/schema-$sid.tar.bz2") {
+#     print localtime() . ": Downloading Schema... Done\n";
+#     return 1;
+#   }
+# 
+#   print localtime() . ": Downloading Schema... ";
+#   $localfile = "replication/schema-$sid.tar.bz2";
+#   $url = $g_schema_url . "schema-$sid.tar.bz2";
+#   $ua = LWP::UserAgent->new();
+#   $request = HTTP::Request->new('GET', $url);
+#   $resp = $ua->request($request, $localfile);
+#   $found = 0;
+#   
+#   use HTTP::Status qw( RC_OK RC_NOT_FOUND RC_NOT_MODIFIED );
+#   if($resp->code == RC_NOT_FOUND) {
+#     # file not found
+#   } elsif($resp->code == RC_OK || $resp->code == RC_NOT_MODIFIED) {
+#     $found = 1;
+#   }
+# 
+#   print "Done\n";
+#   return $found;
+# }
 
-  print localtime() . ": Downloading Schema... ";
-  $localfile = "replication/schema-$sid.tar.bz2";
-  $url = $g_schema_url . "schema-$sid.tar.bz2";
-  $ua = LWP::UserAgent->new();
-  $request = HTTP::Request->new('GET', $url);
-  $resp = $ua->request($request, $localfile);
-  $found = 0;
-  
-  use HTTP::Status qw( RC_OK RC_NOT_FOUND RC_NOT_MODIFIED );
-  if($resp->code == RC_NOT_FOUND) {
-    # file not found
-  } elsif($resp->code == RC_OK || $resp->code == RC_NOT_MODIFIED) {
-    $found = 1;
-  }
-
-  print "Done\n";
-  return $found;
-}
-
-sub checkNewSchema {
-  $id = $_[0];
-
-  open(SCHEMAFILE, "replication/$id/SCHEMA_SEQUENCE") || die "Could not open 'replication/$id/SCHEMA_SEQUENCE'\n";
-  @data = <SCHEMAFILE>;
-  chomp($data[0]);
-  close(SCHEMAFILE);
-  return 0 if($data[0] == $schema);
-  return 1;
-}
+# sub checkNewSchema {
+#   $id = $_[0];
+# 
+#   open(SCHEMAFILE, "replication/$id/SCHEMA_SEQUENCE") || die "Could not open 'replication/$id/SCHEMA_SEQUENCE'\n";
+#   @data = <SCHEMAFILE>;
+#   chomp($data[0]);
+#   close(SCHEMAFILE);
+#   return 0 if($data[0] == $schema);
+#   return 1;
+# }
 
 sub unzip {
   $id = $_[0];
@@ -270,15 +271,15 @@ sub unzip {
   return 1;
 }
 
-sub unzip_schema {
-  $sid = $_[0];
-
-  print localtime() . ": Uncompressing Schema... ";
-  mkdir("replication/schema-$sid");
-  system("tar -xjf replication/schema-$sid.tar.bz2 -C replication");
-  print "Done\n";
-  return 1;
-}
+# sub unzip_schema {
+#   $sid = $_[0];
+# 
+#   print localtime() . ": Uncompressing Schema... ";
+#   mkdir("replication/schema-$sid");
+#   system("tar -xjf replication/schema-$sid.tar.bz2 -C replication");
+#   print "Done\n";
+#   return 1;
+# }
 
 sub fmod {
 	return 0 if($_[1] == 0);
