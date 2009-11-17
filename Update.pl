@@ -147,7 +147,7 @@ if($row[0] eq '0' && !$f_info) {
 	if(&checkNewSchema($rep + 1)) {
 	  BEGINSCHEMA:
 	  if(!&download_schema($schema + 1)) {
-	    print "New screma not available yet.\n";
+	    print "New schema not available yet.\n";
 	    if($f_keeprunning) {
 			  $wait = $g_rep_chkevery;
 			  while($wait > 0) {
