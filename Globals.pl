@@ -60,7 +60,7 @@ $g_cover_path = "/var/www/html/MB/covers";    # The path to where the covers are
 # LiveStats.pl
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-$g_livestats = 1;       # Use LiveStats.pl
+$g_livestats = 0;       # Use LiveStats.pl
                         # NOTE: You must run 'LiveStats.pl -i -f' first time.
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
