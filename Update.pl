@@ -145,25 +145,28 @@ if('0' eq $pending_xactions && !$f_info) {
 		}
 	}
 	&unzip($id);
-  # if(&checkNewSchema($rep + 1)) {
-  #   BEGINSCHEMA:
-  #   if(!&download_schema($schema + 1)) {
-  #     print "New schema not available yet.\n";
-  #     if($f_keeprunning) {
-  #       $wait = $g_rep_chkevery;
-  #       while($wait > 0) {
-  #         print "Trying again in $wait minutes\n";
-  #         sleep(60);
-  #         $wait -= 1;
-  #       }
-  #       goto BEGINSCHEMA;
-  #     }
-  #     exit(0);
-  #   }
-  #   &unzip_schema($schema + 1);
-  #   &run_schema($schema + 1);
-  #   &clean_sid($schema + 1);
-  # }
+	$new_schema_number = &existsNewSchema($rep + 1);
+  if($new_schema_number) {
+    print "\nCurrent MB schema is out of date!  Version $new_schema_number is now in use; schema needs to be resolved.  Quitting.\n";
+    exit 1;
+    #   BEGINSCHEMA:
+    #   if(!&download_schema($schema + 1)) {
+    #     print "New schema not available yet.\n";
+    #     if($f_keeprunning) {
+    #       $wait = $g_rep_chkevery;
+    #       while($wait > 0) {
+    #         print "Trying again in $wait minutes\n";
+    #         sleep(60);
+    #         $wait -= 1;
+    #       }
+    #       goto BEGINSCHEMA;
+    #     }
+    #     exit(0);
+    #   }
+    #   &unzip_schema($schema + 1);
+    #   &run_schema($schema + 1);
+    #   &clean_sid($schema + 1);
+  }
 	&load_data($id);
 } else {
 	print "$pending_xactions pending\n\n";
@@ -250,16 +253,17 @@ sub download {
 #   return $found;
 # }
 
-# sub checkNewSchema {
-#   $id = $_[0];
-# 
-#   open(SCHEMAFILE, "replication/$id/SCHEMA_SEQUENCE") || die "Could not open 'replication/$id/SCHEMA_SEQUENCE'\n";
-#   @data = <SCHEMAFILE>;
-#   chomp($data[0]);
-#   close(SCHEMAFILE);
-#   return 0 if($data[0] == $schema);
-#   return 1;
-# }
+sub existsNewSchema {
+  $id = $_[0];
+
+  open(SCHEMAFILE, "replication/$id/SCHEMA_SEQUENCE") || die "Could not open 'replication/$id/SCHEMA_SEQUENCE'\n";
+  @data = <SCHEMAFILE>;
+  $new_schema = $data[0];
+  chomp($new_schema);
+  close(SCHEMAFILE);
+  return 0 if($new_schema == $schema);
+  return $new_schema;
+}
 
 sub unzip {
   $id = $_[0];
