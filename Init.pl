@@ -30,9 +30,7 @@ sub create_db_stmt {
    chomp($continue = <STDIN>);
 
    if($continue eq "y" || $continue eq "Y") {
-     if($g_use_login == 1) {
-       $g_prog .= " --local-infile -u $g_db_user --password=$g_db_pass";
-     }
+     $g_prog .= " --local-infile -u $g_db_user --password=$g_db_pass";
      $g_prog .= " < sql/temp.sql";
      open(TEMPSQL, "> sql/temp.sql");
      print TEMPSQL "CREATE DATABASE $g_db_name;\n";
@@ -68,9 +66,7 @@ sub load_data {
 
     if($continue eq "y" || $continue eq "Y") {
 	  my $temp_time = time();
-    if($g_use_login == 1) {
-      $g_prog .= " --local-infile -u $g_db_user --password=$g_db_pass";
-    }
+    $g_prog .= " --local-infile -u $g_db_user --password=$g_db_pass";
     $g_prog .= " < sql/temp.sql";
     opendir(DIR, "mbdump") || die "Can't open ./mbdump: $!";
     @files = sort(grep { $_ ne '.' and $_ ne '..' } readdir(DIR));

@@ -20,6 +20,10 @@ $g_db_user = 'root';              # The user name for the MySQL login (eg. 'root
 
 $g_db_pass = '';                  # The password for the MySQL login
 
+$g_db_host = 'localhost';
+
+$g_db_port = 3306;
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Replication Options
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,7 +73,7 @@ $g_livestats = 0;       # Use LiveStats.pl
 
 @g_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
-$dbh = DBI->connect('dbi:mysql:' . $g_db_name, $g_db_user, $g_db_pass);
+$dbh = DBI->connect("dbi:mysql:$g_db_name:$g_db_host:$g_db_port", $g_db_user, $g_db_pass);
 
 return 1;
 

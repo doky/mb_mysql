@@ -111,6 +111,7 @@ $sth = $dbh->prepare($sql);
 $sth->execute;
 @row = $sth->fetchrow_array();
 $pending_xactions = $row[0];
+
 if($f_info) {
 	print "\nCurrent replication       : " . ($rep + 1);
 	$sql = "SELECT * from replication_control";
@@ -126,7 +127,7 @@ print "\nCurrent replication is $rep\n\n";
 $id = int($rep) + 1;
 print "Looking for previous pending changes... ";
 
-if('0' eq $pending_xactions && !$f_info) {
+if('0' eq $pending_xactions) {
 	print "None\n\n";
 	if($f_onlypending) {
 		exit(0);
@@ -173,7 +174,7 @@ if('0' eq $pending_xactions && !$f_info) {
 	&run_transactions();
 }
 
-if($f_keeprunning && !$f_info) {
+if($f_keeprunning) {
 	goto BEGIN;
 }
 
@@ -418,36 +419,33 @@ sub run_transactions {
 sub load_data {
   $id = $_[0];
 
-	# make sure there are no pending transactions before cleanup
-	$temp = $dbh->prepare("SELECT count(*) FROM Pending");
+  # make sure there are no pending transactions before cleanup
+  $temp = $dbh->prepare("SELECT count(*) FROM Pending");
   $temp->execute;
   @row = $temp->fetchrow_array();
   $temp->finish;
-	if($row[0] ne '0') {
-		return -1;
-	}
-
-	# perform cleanup (makes sure there no left over records in the PendingData table)
-	$dbh->do("DELETE FROM PendingData");
-
-  if($g_use_login == 1) {
-    $g_prog .= " -u $g_db_user --password=$g_db_pass";
+  if($row[0] ne '0') {
+    print "Unexpectedly found pending transactions. Quitting.\n";
+    exit 1;
   }
-  $g_prog .= " < sql/temp.sql";
 
-  # load Pending and PendingData
-	print localtime() . ": Loading pending tables... ";
-  &run_sql("LOAD DATA LOCAL INFILE 'replication/$id/mbdump/Pending' INTO TABLE Pending");
-  &run_sql("LOAD DATA LOCAL INFILE 'replication/$id/mbdump/PendingData' INTO TABLE PendingData");
+  # perform cleanup (makes sure there no left over records in the PendingData table)
+  $dbh->do("DELETE FROM PendingData");
+
+  print localtime() . ": Loading pending tables... ";
+  open(TEMPSQL, "> sql/temp.sql");
+  for my $pending_table (qw(Pending PendingData)) {
+    print TEMPSQL "LOAD DATA LOCAL INFILE 'replication/$id/mbdump/$pending_table' INTO TABLE $pending_table\n";
+    print TEMPSQL "FIELDS TERMINATED BY '\\t' ENCLOSED BY '' ESCAPED BY '\\\\'\n";
+    print TEMPSQL "LINES TERMINATED BY '\\n' STARTING BY ''\n;\n";
+  }
   close(TEMPSQL);
-  system($g_prog);
+  system("$g_prog --local-infile -u $g_db_user --password=$g_db_pass -P $g_db_port -h $g_db_host $g_db_name < sql/temp.sql");
   print "Done\n";
 
-  # run the pending edits
   print localtime() . ": Processing Transactions...\n";
   &run_transactions();
   print "Finished\n";
 
   return 1;
 }
-
