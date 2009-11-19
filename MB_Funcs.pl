@@ -251,11 +251,12 @@ sub make_where_clause {
 }
 
 sub mirrorInsert {
-	my ($result, $slave, $row, $transId)  = @_;
+	my ($row, $transId)  = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
+	my $packed_data = $row->[4];
 
-	my $valuepairs = &unpack_data($row->[4]) or die;
+	my $valuepairs = &unpack_data($packed_data) or die;
 
 	my ($statement, $args) = &prepare_insert($tableName, $valuepairs);
 
@@ -278,11 +279,12 @@ sub mirrorInsert {
 }
 
 sub mirrorDelete {
-	my ($result, $slave, $row, $transId) = @_;
+	my ($row, $transId) = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
+	my $packed_data = $row->[4];
 
-	my $keypairs = &unpack_data($row->[4]) or die;
+	my $keypairs = &unpack_data($packed_data) or die;
 
 	my ($statement, $args) = &prepare_delete($tableName, $keypairs);
 
@@ -300,11 +302,12 @@ sub mirrorDelete {
 }
 
 sub mirrorUpdate {
-	my ($result, $slave, $row, $transId) = @_;
+	my ($row, $transId) = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
+	my $packed_data = $row->[4];
 
-	my $keypairs = &unpack_data($row->[4]) or die;
+	my $keypairs = &unpack_data($packed_data) or die;
 
 	my $valuepairs = $keypairs;
 
@@ -334,28 +337,21 @@ sub show_long_sql {
 }
 
 sub mirrorCommand {
-	my ($op, $result, $slave, $row, $transId)  = @_;
+  my ($op, $row, $transId)  = @_;
 
-	my $table = $row->[1];
-	$table =~ s/^"public"\.//;
-	$row->[1] = $table;
-	my $t = ($bytable{$table} ||= [0,0,0]);
+  my $table = $row->[1];
+  $table =~ s/^"public"\.//;
+  $row->[1] = $table;
 
-	if($op eq 'i') {
-		++$ins;
-		++$t->[0];
-		return mirrorInsert($result, $slave, $row, $transId);
-	} elsif($op eq 'd') {
-		++$del;
-		++$t->[2];
-		return mirrorDelete($result, $slave, $row, $transId);
-	} elsif($op eq 'u') {
-		++$upd;
-		++$t->[1];
-		return mirrorUpdate($result, $slave, $row, $transId);
-	}
+  if($op eq 'i') {
+    return mirrorInsert($row, $transId);
+  } elsif($op eq 'd') {
+    return mirrorDelete($row, $transId);
+  } elsif($op eq 'u') {
+    return mirrorUpdate($row, $transId);
+  }
 
-	return 0;
+  return 0;
 }
 
 # Given a packed string from "PendingData"."Data", this sub unpacks it into

@@ -354,11 +354,12 @@ sub run_transactions {
   		$slave->execute;
 
   		while(@row2 = $slave->fetchrow_array()) {
+  		  $operation = $row2[2];
 				my $temp_time = time();
 				if($f_show_extras == 1) {
-					print "$stmt_type{$row2[2]} ";
+					print "$stmt_type{$operation} ";
 				}
-				if (!mirrorCommand($row2[2], $sth, $slave, \@row2, $XID)) {
+				if (!mirrorCommand($operation, \@row2, $XID)) {
 					die "Mirror command failed.\n";
 				}
 
