@@ -228,26 +228,26 @@ sub prepare_delete {
 # placeholders) and a list of arguments to go with it.
 
 sub make_where_clause {
-	my $keypairs = $_[0]; # as returned by unpack_data
-	$keypairs or die;
-	%$keypairs or die;
+  my $keypairs = $_[0]; # as returned by unpack_data
+  $keypairs or die;
+  %$keypairs or die;
 
-	my @conditions;
-	my @args;
+  my @conditions;
+  my @args;
 
-	for my $column (sort keys %$keypairs) {
-		if (defined(my $value = $keypairs->{$column})) {
-			  if($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
-			    push @conditions, qq[`$column` = "?"];
-			    push @args, $value;
-		  } elsif($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
-			  push @conditions, qq[`$column` IS NULL];
-		  }
-		 }
-	}
+  for my $column (sort keys %$keypairs) {
+    if (defined(my $value = $keypairs->{$column})) {
+      if($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
+        push @conditions, qq[`$column` = "?"];
+        push @args, $value;
+      } elsif($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
+        push @conditions, qq[`$column` IS NULL];
+      }
+    }
+  }
 
-	my $clause = join " AND ", @conditions;
-	return ($clause, \@args);
+  my $clause = join " AND ", @conditions;
+  return ($clause, \@args);
 }
 
 sub mirrorInsert {
