@@ -121,8 +121,6 @@ sub smartSQL {
 # each one then returns an SQL statement and the arguments to go with it.
 # The table name will already be quoted and qualified, if required.
 
-$dorepstmt = 1;
-
 sub table_name {
 	$table = $_[0];
 	$table = substr($table, 1, length($table) - 2);
@@ -171,40 +169,39 @@ sub procAttributes {
 }
 
 sub prepare_insert {
-	my ($table, $valuepairs) = @_;
+	my ($table, $values) = @_;
 	$table = &table_name($table);
-	%$valuepairs or die;
-	foreach $a (keys %$valuepairs) {
-		$valuepairs->{$a} = &sql_escape($valuepairs->{$a});
-		$valuepairs->{$a} = &procAttributes($valuepairs->{$a}) if($a eq "attributes");
+	%$values or die;
+	foreach $col (keys %$values) {
+		$values->{$col} = &sql_escape($values->{$col});
+		$values->{$col} = &procAttributes($values->{$col}) if($col eq "attributes");
 	}
 
-	my @k = keys %$valuepairs;
-	my $colnames = join(", ", map { "`$_`" } @k);
-	my $params = join(", ", map { "\"?\"" } &sql_unescape(@k));
-	my @args = @$valuepairs{@k};
+	my @cols = keys %$values;
+	my $colnames = join(", ", map { "`$_`" } @cols);
+	my $params = join(", ", map { "\"?\"" } &sql_unescape(@cols));
+	my @args = @$values{@cols};
 
 	my $sql = qq[INSERT INTO $table ($colnames) VALUES ($params)];
 	return ($sql, \@args);
 }
 
 sub prepare_update {
-	my ($table, $valuepairs, $keypairs) = @_;
+	my ($table, $keys, $values) = @_;
 	$table = &table_name($table);
-	%$valuepairs or die;
-	%$keypairs or die;
-	foreach $a (keys %$valuepairs) {
-		$valuepairs->{$a} = &sql_escape($valuepairs->{$a});
-		$valuepairs->{$a} = &procAttributes($valuepairs->{$a}) if($a eq "attributes");
+	%$keys or die;
+	%$values or die;
+	foreach $col (keys %$values) {
+		$values->{$col} = &sql_escape($values->{$col});
+		$values->{$col} = &procAttributes($values->{$col}) if($col eq "attributes");
 	}
 
-	my @k = keys %$valuepairs;
-	my $setclause = join(", ", map { qq[`$_` = "?"] } &sql_unescape(@k));
-	my @setargs = @$valuepairs{@k};
+	my @cols = keys %$values;
+	my $setclause = join(", ", map { qq[`$_` = "?"] } &sql_unescape(@cols));
+	my @setargs = @$values{@cols};
 
-	my ($whereclause, $whereargs) = make_where_clause($keypairs);
-	$dorepstmt = 1;
-	$dorepstmt = 0 if($whereclause eq "");
+	my ($whereclause, $whereargs) = make_where_clause($keys);
+  die "where clause unexpectedly empty" if($whereclause eq "");
 
 	my $sql = qq[UPDATE $table SET $setclause WHERE $whereclause];
 	my @args = (@setargs, @$whereargs);
@@ -212,13 +209,12 @@ sub prepare_update {
 }
 
 sub prepare_delete {
-	my ($table, $keypairs) = @_;
+	my ($table, $keys) = @_;
 	$table = &table_name($table);
-	%$keypairs or die;
+	%$keys or die;
 
-	my ($whereclause, $whereargs) = make_where_clause($keypairs);
-	$dorepstmt = 1;
-	$dorepstmt = 0 if($whereclause eq "");
+	my ($whereclause, $whereargs) = make_where_clause($keys);
+  die "where clause unexpectedly empty" if($whereclause eq "");
 
 	my $sql = qq[DELETE FROM $table WHERE $whereclause];
 	return($sql, $whereargs);
@@ -226,23 +222,20 @@ sub prepare_delete {
 
 # Given a hash of column-value pairs, construct a WHERE clause (using SQL
 # placeholders) and a list of arguments to go with it.
-
 sub make_where_clause {
-  my $keypairs = $_[0]; # as returned by unpack_data
-  $keypairs or die;
-  %$keypairs or die;
+  my $keys = $_[0]; # as returned by unpack_data
+  $keys or die;
+  %$keys or die;
 
   my @conditions;
   my @args;
 
-  for my $column (sort keys %$keypairs) {
-    if (defined(my $value = $keypairs->{$column})) {
-      if($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
-        push @conditions, qq[`$column` = "?"];
-        push @args, $value;
-      } elsif($column eq 'id' || $column eq 'album' || $column eq 'artist' || $column eq 'track' || $column eq 'ref') {
-        push @conditions, qq[`$column` IS NULL];
-      }
+  for my $column (sort keys %$keys) {
+    if (defined(my $value = $keys->{$column})) {
+      push @conditions, qq[`$column` = "?"];
+      push @args, $value;
+    } else {
+      push @conditions, qq[`$column` IS NULL];
     }
   }
 
@@ -254,11 +247,11 @@ sub mirrorInsert {
 	my ($row, $transId)  = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
-	my $packed_data = $row->[4];
+	my $packed_values = $row->[4];
 
-	my $valuepairs = &unpack_data($packed_data) or die;
+	my $values = &unpack_data($packed_values) or die;
 
-	my ($statement, $args) = &prepare_insert($tableName, $valuepairs);
+	my ($statement, $args) = &prepare_insert($tableName, $values);
 
 	print localtime() . " : INSERT INTO $tableName\n" if $short_sql;
 	show_long_sql($statement, $args) if $long_sql;
@@ -272,7 +265,7 @@ sub mirrorInsert {
 	
 	# download new cover
 	if($tableName eq "\"album_amazon_asin\"" && $g_download_new_covers) {
-	  system("perl DownloadCover.pl -f -i=" . $valuepairs->{'album'});
+	  system("perl DownloadCover.pl -f -i=" . $values->{'album'});
 	}
 
 	return 1;
@@ -282,16 +275,16 @@ sub mirrorDelete {
 	my ($row, $transId) = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
-	my $packed_data = $row->[4];
+	my $packed_keys = $row->[3];
 
-	my $keypairs = &unpack_data($packed_data) or die;
+	my $keys = &unpack_data($packed_keys) or die;
 
-	my ($statement, $args) = &prepare_delete($tableName, $keypairs);
+	my ($statement, $args) = &prepare_delete($tableName, $keys);
 
 	print localtime() . " : DELETE FROM $tableName\n" if $short_sql;
 	show_long_sql($statement, $args) if $long_sql;
 	$rec_count = 0;
-	$rec_count = &run_sql(&substituteArgs($statement, @$args)) if($dorepstmt == 1);
+	$rec_count = &run_sql(&substituteArgs($statement, @$args));
 	if($g_livestats) {
 	  &update_livestats("count." . substr($table, 15, length($table) - 15), "subtract", $rec_count);
 	  &update_livestats("count.all", "subtract", $rec_count);
@@ -305,23 +298,23 @@ sub mirrorUpdate {
 	my ($row, $transId) = @_;
 	my $seqId = $row->[0];
 	my $tableName = $row->[1];
-	my $packed_data = $row->[4];
+	my $packed_keys = $row->[3];
+	my $packed_values = $row->[4];
 
-	my $keypairs = &unpack_data($packed_data) or die;
+	my $keys = &unpack_data($packed_keys) or die;
+	my $values = &unpack_data($packed_values) or die;
 
-	my $valuepairs = $keypairs;
-
-	my ($statement, $args) = &prepare_update($tableName, $valuepairs, $keypairs);
+	my ($statement, $args) = &prepare_update($tableName, $keys, $values);
 
 	print localtime() . " : UPDATE $tableName\n" if $short_sql;
 	show_long_sql($statement, $args) if $long_sql;
 	$rec_count = 0;
-	$rec_count = &run_sql(&substituteArgs($statement, @$args)) if($dorepstmt == 1);
+	$rec_count = &run_sql(&substituteArgs($statement, @$args));
 	&update_livestats("global.updates", "add", 1) if($g_livestats);
 	
 	# download new cover
 	if($tableName eq "\"album_amazon_asin\"" && $g_download_new_covers) {
-	  system("perl DownloadCover.pl -f -i=" . $valuepairs->{'album'});
+	  system("perl DownloadCover.pl -f -i=" . $values->{'album'});
 	}
 
 	return 1;
