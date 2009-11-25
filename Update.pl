@@ -437,9 +437,6 @@ sub load_data {
     exit 1;
   }
 
-  # perform cleanup (makes sure there no left over records in the PendingData table)
-  $dbh->do("DELETE FROM PendingData");
-
   print localtime() . ": Loading pending tables... ";
   open(TEMPSQL, "> sql/temp.sql");
   for my $pending_table (qw(Pending PendingData)) {
