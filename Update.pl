@@ -406,19 +406,10 @@ SQL
   @row = $temp->fetchrow_array();
 	$nextrep = $row[2];
   $temp->finish;
-  
+
   # update replication id
   &run_sql("UPDATE replication_control SET current_replication_sequence=" . ($rep + 1));
-  
-  # make sure tables are truncated and ready for next replication.
-  # Usually not needed, but just to be safe.
-  $temp = $dbh->prepare("TRUNCATE Pending");
-  $temp->execute;
-  $temp->finish;
-  $temp = $dbh->prepare("TRUNCATE PendingData");
-  $temp->execute;
-  $temp->finish;
-	
+
 	# Clean up. Remove old replication
 	system("rm -f replication/replication-$nextrep.tar.bz2");
 	system("rm -f -r replication/$nextrep");
