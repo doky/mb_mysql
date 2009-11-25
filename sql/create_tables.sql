@@ -752,18 +752,18 @@ CREATE TABLE IF NOT EXISTS moderator_subscribe_artist
 CREATE TABLE IF NOT EXISTS Pending
 (
     SeqId               INTEGER NOT NULL,
-    TableName           VARCHAR(255) NOT NULL, -- CHANGE: "VARCHAR"
-    Op                  VARCHAR(1), -- CHANGE: "CHARACTER"
-    XID                 INT4 NOT NULL
+    TableName           VARCHAR(255) NOT NULL,
+    Op                  CHAR(1),
+    XID                 INTEGER NOT NULL
 ) ENGINE = InnoDB;
 -- end
 
 -- create PendingData
 CREATE TABLE IF NOT EXISTS PendingData
 (
-    SeqId               INT4 NOT NULL,
-    IsKey               BOOL NOT NULL,
-    Data                TEXT -- CHANGE: "VARCHAR"
+    SeqId               INTEGER NOT NULL,
+    IsKey               CHAR(1),
+    Data                TEXT
 ) ENGINE = InnoDB;
 -- end
 

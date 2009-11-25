@@ -223,11 +223,6 @@ ALTER TABLE Pending
 ADD PRIMARY KEY SeqId (SeqId);
 -- end
 
--- primary PendingData
-ALTER TABLE PendingData
-ADD PRIMARY KEY SeqId (SeqId);
--- end
-
 -- primary puid
 ALTER TABLE puid
 ADD PRIMARY KEY id (id);
@@ -710,5 +705,15 @@ ADD INDEX artist_id (artist_id),
 ADD INDEX artist_gid (artist_gid),
 ADD INDEX album_id (album_id),
 ADD INDEX album_gid (album_gid);
+-- end
+
+-- index Pending
+ALTER TABLE Pending
+ADD KEY XID (XID);
+-- end
+
+-- index PendingData
+ALTER TABLE PendingData
+ADD KEY SeqId (SeqId);
 -- end
 
