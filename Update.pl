@@ -324,7 +324,7 @@ sub run_transactions {
 	my $rows = 0;
 	my $strows = 0;
 
-	$temp = $dbh->prepare("SELECT count(*) FROM PendingData");
+	$temp = $dbh->prepare("SELECT count(1) FROM Pending");
   $temp->execute;
   @row = $temp->fetchrow_array();
 	$total_statements = $row[0];
@@ -342,14 +342,21 @@ sub run_transactions {
 			next;
 		}
 
-		my $query2 = "SELECT count(*) FROM Pending, PendingData WHERE Pending.SeqId=PendingData.SeqId AND Pending.XID=$XID ORDER BY Pending.SeqId, IsKey DESC";
+		my $query2 = "SELECT count(*) FROM Pending WHERE XID=$XID";
 		my $sth2 = $dbh->prepare($query2);
     $sth2->execute;
     @temprow = $sth2->fetchrow_array();
 		my %stmt_type = ( 'i' => 'INSERT', 'u' => 'UPDATE', 'd' => 'DELETE' );
 		if($temprow[0] ne "0") {
 			my (@row2, $curTuple);
-			my $query = "SELECT PendingData.SeqId, Pending.TableName, Pending.Op, PendingData.IsKey, PendingData.Data AS Data FROM Pending, PendingData WHERE Pending.SeqId=PendingData.SeqId AND Pending.XID=$XID ORDER BY Pending.SeqId, IsKey DESC";
+			my $query = <<SQL;
+SELECT p.SeqId as 'SeqId', p.TableName as 'TableName', p.Op as 'Op', pd1.Data as 'Keys', pd2.Data as 'Data'
+FROM Pending as p
+  LEFT OUTER JOIN PendingData as pd1 on (p.SeqId=pd1.SeqId and pd1.IsKey = 't')
+  LEFT OUTER JOIN PendingData as pd2 on (p.SeqId=pd2.SeqID and pd2.IsKey = 'f')
+WHERE p.XID=$XID
+ORDER BY p.SeqId
+SQL
 			$slave = $dbh->prepare($query);
   		$slave->execute;
 
