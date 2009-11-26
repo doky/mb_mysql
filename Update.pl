@@ -357,9 +357,10 @@ FROM Pending as p
 WHERE p.XID=$XID
 ORDER BY p.SeqId
 SQL
+      $dbh->begin_work();
+
 			$slave = $dbh->prepare($query);
   		$slave->execute;
-
   		while(@row2 = $slave->fetchrow_array()) {
   		  $operation = $row2[2];
 				my $temp_time = time();
@@ -367,6 +368,7 @@ SQL
 					print "$stmt_type{$operation} ";
 				}
 				if (!mirrorCommand($operation, \@row2, $XID)) {
+				  $dbh->rollback();
 					die "Mirror command failed.\n";
 				}
 
@@ -394,6 +396,8 @@ SQL
 				$dbh->do("DELETE FROM PendingData WHERE SeqId=$row2[0]") or warn "\nCould not remove PendingData record\n";
 				$lastxid = $XID;
 			}
+
+      $dbh->commit();
 		}
 		++$rows;
 	}
