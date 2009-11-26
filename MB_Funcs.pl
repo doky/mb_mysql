@@ -131,6 +131,12 @@ sub table_name {
 	return $table
 }
 
+sub normalize_date {
+  my $str = $_[0];
+  $str =~ s/(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\.\d+\+\d+/$1/;
+  return $str;
+}
+
 sub sql_escape {
 	my $k = $_[0];
 	$k =~ s/\\/\\\\/g;
@@ -169,43 +175,58 @@ sub procAttributes {
 }
 
 sub prepare_insert {
-	my ($table, $values) = @_;
-	$table = &table_name($table);
-	%$values or die;
-	foreach $col (keys %$values) {
-		$values->{$col} = &sql_escape($values->{$col});
-		$values->{$col} = &procAttributes($values->{$col}) if($col eq "attributes");
-	}
+  my ($table, $values) = @_;
+  $table = &table_name($table);
+  %$values or die;
 
-	my @cols = keys %$values;
-	my $colnames = join(", ", map { "`$_`" } @cols);
-	my $params = join(", ", map { "\"?\"" } &sql_unescape(@cols));
-	my @args = @$values{@cols};
+  my @column_names = ();
+  my @args = ();
+  foreach $col (keys %$values) {
+    if (defined(my $value = $values->{$col})) {
+      $value = &normalize_date(&sql_escape($value));
+      if ($col eq "attributes") {
+        $col = "status";
+        $value = &procAttributes($value);
+      }
+      push(@column_names, $col);
+      push(@args, $value);
+    }
+  }
+  my $colnames = join(", ", map { "`$_`" } @column_names);
+  my $params = join(", ", map { '"?"' } @args);
 
-	my $sql = qq[INSERT INTO $table ($colnames) VALUES ($params)];
-	return ($sql, \@args);
+  my $sql = qq[INSERT INTO $table ($colnames) VALUES ($params)];
+  return ($sql, \@args);
 }
 
 sub prepare_update {
-	my ($table, $keys, $values) = @_;
-	$table = &table_name($table);
-	%$keys or die;
-	%$values or die;
-	foreach $col (keys %$values) {
-		$values->{$col} = &sql_escape($values->{$col});
-		$values->{$col} = &procAttributes($values->{$col}) if($col eq "attributes");
-	}
+  my ($table, $keys, $values) = @_;
+  $table = &table_name($table);
+  %$keys or die;
+  %$values or die;
 
-	my @cols = keys %$values;
-	my $setclause = join(", ", map { qq[`$_` = "?"] } &sql_unescape(@cols));
-	my @setargs = @$values{@cols};
+  my @clause_items = ();
+  my @setargs = ();
+  foreach $col (keys %$values) {
+    if (defined(my $value = $values->{$col})) {
+      $value = &normalize_date(&sql_escape($value));
+      if ($col eq "attributes") {
+        $col = "status";
+        $value = &procAttributes($value);
+      }
+      push(@clause_items, qq[`$col` = "?"]);
+      push(@setargs, $value);
+    } else {
+      push(@clause_items, qq[`$col` = NULL]);
+    }
+  }
 
-	my ($whereclause, $whereargs) = make_where_clause($keys);
+  my $setclause = join(", ", @clause_items);
+  my ($whereclause, $whereargs) = make_where_clause($keys);
   die "where clause unexpectedly empty" if($whereclause eq "");
-
-	my $sql = qq[UPDATE $table SET $setclause WHERE $whereclause];
-	my @args = (@setargs, @$whereargs);
-	return($sql, \@args);
+  my $sql = qq[UPDATE $table SET $setclause WHERE $whereclause];
+  my @args = (@setargs, @$whereargs);
+  return($sql, \@args);
 }
 
 sub prepare_delete {
