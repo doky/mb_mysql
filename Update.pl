@@ -389,8 +389,8 @@ SQL
 					}
 				}
 				++$strows;
-				$dbh->do("DELETE FROM Pending WHERE SeqId=$row2[0]") or warn "\nCould not remove Pending record\n";
-				$dbh->do("DELETE FROM PendingData WHERE SeqId=$row2[0]") or warn "\nCould not remove PendingData record\n";
+				$dbh->do("DELETE FROM Pending WHERE SeqId=$row2[0]") or $dbh->rollback() and die "\nCould not remove Pending record\n";
+				$dbh->do("DELETE FROM PendingData WHERE SeqId=$row2[0]") or $dbh->rollback() and die "\nCould not remove PendingData record\n";
 				$lastxid = $XID;
 			}
 
