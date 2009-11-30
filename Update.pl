@@ -383,12 +383,9 @@ SQL
 					if($f_show_extras == 1) {
 						print "(" . &formattime($stmt_time) . ") : ";
 					}
-					if($f_nonverbose) {
-						if($lastxid != $XID) {
-							printf("XIDs: %5d   Stmts: %5s   est%%: %6s%%   Elapsed: %12s   ETA: %12s\n", $rows, $strows + 1, &round($est, 0.1), &formattime($time), ($est == 0) ? "-" : &formattime($time * (100 - $est) / $est));
-						}
-					} else {
-						printf("XIDs: %5d   Stmts: %5s   est%%: %6s%%   Elapsed: %12s   ETA: %12s\n", $rows, $strows + 1, &round($est, 0.1), &formattime($time), ($est == 0) ? "-" : &formattime($time * (100 - $est) / $est));
+					if(!$f_nonverbose || $lastxid != $XID) {
+						printf("XIDs: %5d   Stmts: %5s   est%%: %6s%%   Elapsed: %12s   ETA: %12s\r", $rows, $strows + 1, &round($est, 0.1), &formattime($time), ($est == 0) ? "-" : &formattime($time * (100 - $est) / $est));
+						$|++; # flush stdout, since \r doesn't do this implicitly
 					}
 				}
 				++$strows;
@@ -402,8 +399,9 @@ SQL
 		++$rows;
 	}
 	if($f_nonverbose) {
-		printf("XIDs: %5d   Stmts: %5s   est%%: %6s%%   Elapsed: %12s   ETA: %12s\n", $rows, $strows + 1, &round($est, 0.1), &formattime($time), ($est == 0) ? "-" : &formattime($time * (100 - $est) / $est));
+		printf("XIDs: %5d   Stmts: %5s   est%%: %6s%%   Elapsed: %12s   ETA: %12s", $rows, $strows + 1, &round($est, 0.1), &formattime($time), ($est == 0) ? "-" : &formattime($time * (100 - $est) / $est));
 	}
+  print "\n";
 
 	$temp = $dbh->prepare("SELECT * FROM replication_control");
   $temp->execute;
