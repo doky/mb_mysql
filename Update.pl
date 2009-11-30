@@ -198,7 +198,7 @@ sub format_sql_date {
 
 sub download {
   $id = $_[0];
-	print "===== $id =====\n";
+	print "===== Applying $id =====\n";
 	
 	# make sure that the file isn't already downloaded
 	if(-e "replication/replication-$id.tar.bz2") {
