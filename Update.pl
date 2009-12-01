@@ -12,6 +12,7 @@ my $f_quiet = 0;
 my $f_info = 0;
 my $f_onlypending = 0;
 my $f_keeprunning = 0;
+my $f_pidfile = 0;
 my $f_nonverbose = 0;
 my $f_onlytocurrent = 0;
 my $f_show_extras = 0;
@@ -29,6 +30,8 @@ foreach $ARG (@ARGV) {
 		$f_onlypending = 1;
 	} elsif($parts[0] eq "-r" || $parts[0] eq "--keeprunning") {
 		$f_keeprunning = 1;
+	} elsif($parts[0] eq "-f" || $parts[0] eq "--pidfile") {
+		$f_pidfile = 1;
 	} elsif($parts[0] eq "-n" || $parts[0] eq "--nonverbose") {
 		$f_nonverbose = 1;
 	} elsif($parts[0] eq "-s" || $parts[0] eq "--showall") {
@@ -61,10 +64,22 @@ sub showhelp {
   print "-p or --onlypending    Only process pending transactions then quit.\n";
   print "-q or --quiet          Non-verbose. The status of each statement is not printed.\n";
   print "-r or --keeprunning    Keep the script running constantly, automatically checking for new replications\n";
+  print "-f or --pidfile        Maintain a pidfile while this script is running\n";
   print "                       every 15 mins (value determined by \$g_rep_chkevery)\n";
   print "-s or --showall        This will show what type of statement (INSERT/UPDATE/DELETE) is being run and\n";
   print "                       how long it takes for the statement to process\n";
   print "-t or --truncate       Force TRUNCATE on Pending and PendindData tables.\n";
+}
+
+my $pidfile;
+if($f_pidfile == 1) {
+  require Proc::Pidfile;
+  $pidfile = Proc::Pidfile->new(pidfile => "update.pid");
+  # by exiting on our own terms, $pidfile will be undef'd and thus the pidfile will be unlinked
+  $SIG{'INT'} = $SIG{'QUIT'} = $SIG{'TERM'} = sub {
+    # we don't need to do any cleanup since our db work happens within transactions
+    exit;
+  };
 }
 
 BEGIN:
