@@ -148,9 +148,8 @@ if('0' eq $pending_xactions) {
 		exit(0);
 	}
 	if(!&download($id)) {
-		print "\nReplication $id could not be found on the server\n\n";
-		exit(0) if(!$f_keeprunning);
-		if($f_keeprunning) {
+		print "\nReplication $id is not yet on the server\n\n";
+		if($f_keeprunning && !$f_onlytocurrent) {
 			$wait = $g_rep_chkevery;
 			while($wait > 0) {
 				print "Trying again in $wait minutes\n";
@@ -158,6 +157,8 @@ if('0' eq $pending_xactions) {
 				$wait -= 1;
 			}
 			goto BEGIN;
+		} else {
+		  exit(0);
 		}
 	}
 	&unzip($id);
